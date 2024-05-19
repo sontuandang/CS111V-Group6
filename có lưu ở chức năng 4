@@ -1,0 +1,76 @@
+import tkinter as tk
+from tkinter import filedialog
+from PIL import Image, ImageTk
+import os
+
+def show_picture():
+    global image_path
+    image_path = filedialog.askopenfilename()
+    if image_path:
+        display_image()
+
+def display_image():
+    global image, tk_image, buttons, current_angle
+    image = Image.open(image_path)
+    tk_image = ImageTk.PhotoImage(image)
+    current_angle = 0
+
+    canvas.delete("all")
+    canvas.create_image(0, 0, anchor="nw", image=tk_image)
+    canvas.image = tk_image
+
+    buttons = []
+    buttons.append(tk.Button(canvas, text="Xoay ảnh", command=rotate_image))
+    buttons.append(tk.Button(canvas, text="Chức năng 2"))
+    buttons.append(tk.Button(canvas, text="Chức năng 3"))
+    buttons.append(tk.Button(canvas, text="Lưu ảnh", command=save_image))  # Thêm nút Lưu ảnh
+
+    y_offset = 10
+    for button in buttons:
+        canvas.create_window(3, y_offset, anchor="nw", window=button)
+        y_offset += 30
+
+def rotate_image():
+    global image, tk_image, buttons, current_angle, saved_image_path
+    if image:
+        current_angle += 90
+        current_angle %= 360
+        rotated_image = image.rotate(current_angle)
+        tk_image = ImageTk.PhotoImage(rotated_image)
+        canvas.delete("all")
+        canvas.create_image(0, 0, anchor="nw", image=tk_image)
+        canvas.image = tk_image
+
+        if image_path and current_angle == 0:  # Kiểm tra xem có ảnh được chọn và góc xoay là 0 không
+            save_image()  # Lưu ảnh nếu điều kiện đúng
+
+        y_offset = 10
+        for button in buttons:
+            canvas.create_window(3, y_offset, anchor="nw", window=button)
+            y_offset += 30
+
+def save_image():
+    global image, saved_image_path
+    if image:
+        filename = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png"), ("All files", "*.*")])
+        if filename:
+            image.save(filename)
+            saved_image_path = filename
+
+root = tk.Tk()
+root.title("Image with Buttons")
+
+canvas = tk.Canvas(root, width=10000, height=600)
+canvas.pack()
+
+open_image_button = tk.Button(root, text="Open Image", command=show_picture)
+open_image_button.pack()
+
+image_path = None
+image = None
+tk_image = None
+buttons = []
+current_angle = 0
+saved_image_path = None  # Thêm biến này để lưu đường dẫn của ảnh đã lưu
+
+root.mainloop()
