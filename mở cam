@@ -1,0 +1,41 @@
+
+def record_video():
+    # Initialize VideoCapture with camera ID
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        print("Error: Unable to open camera.")
+        return
+
+    # Define frame dimensions and frames per second
+    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = 30  # Frames per second
+
+    # Create a VideoWriter object to write the video
+    save_path = filedialog.asksaveasfilename(defaultextension=".avi", filetypes=[("AVI files", "*.avi"), ("All files", "*.*")])
+    if save_path:
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        out = cv2.VideoWriter(save_path, fourcc, fps, (frame_width, frame_height))
+
+        # Video writing function
+        def write_frame():
+            ret, frame = cap.read()
+            if ret:
+                # Write frame to the video
+                out.write(frame)
+
+                # Display the video in a tkinter window
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                img = Image.fromarray(frame_rgb)
+                img = ImageTk.PhotoImage(image=img)
+                label.config(image=img)
+                label.image = img
+
+                # Repeat the function after a certain time interval (milliseconds)
+                label.after(1, write_frame)
+
+        # Start recording the video
+        write_frame()
+
+        # Cancel video recording when the window is closed
+        root.protocol("WM_DELETE_WINDOW", lambda: stop_recording(cap, out))
