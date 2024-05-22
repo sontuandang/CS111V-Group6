@@ -148,9 +148,19 @@ def return_cursor():
     canvas.unbind("<Button-1>")
     canvas.unbind("<B1-Motion>")
 
-
+def stop_recording():
+    global recording, cap, out
+    if recording:
+        recording = False
+        cap.release()
+        out.release()
+        cv2.destroyAllWindows()
+        record_button.config(state=tk.NORMAL)
+        stop_button.config(state=tk.DISABLED)
+        video_window.destroy()
 
 def record_video():
+    global recording, cap, out, video_label, video_window, stop_button
     # Initialize VideoCapture with camera ID
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
@@ -167,36 +177,45 @@ def record_video():
     if save_path:
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         out = cv2.VideoWriter(save_path, fourcc, fps, (frame_width, frame_height))
+        recording = True
+        record_button.config(state=tk.DISABLED)
+
+        # Create a new window for video recording
+        video_window = tk.Toplevel(root)
+        video_window.title("Recording Video")
+
+        # Create a label for displaying the video frames
+        video_label = tk.Label(video_window)
+        video_label.pack()
+
+        # Create a stop button in the new window
+        stop_button = tk.Button(video_window, text="Stop Video", command=stop_recording)
+        stop_button.pack()
 
         # Video writing function
         def write_frame():
-            ret, frame = cap.read()
-            if ret:
-                # Write frame to the video
-                out.write(frame)
+            if recording:
+                ret, frame = cap.read()
+                if ret:
+                    # Write frame to the video
+                    out.write(frame)
 
-                # Display the video in a tkinter window
-                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                img = Image.fromarray(frame_rgb)
-                img = ImageTk.PhotoImage(image=img)
-                label.config(image=img)
-                label.image = img
+                    # Display the video in the new window
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    img = Image.fromarray(frame_rgb)
+                    img = ImageTk.PhotoImage(image=img)
+                    video_label.config(image=img)
+                    video_label.image = img
 
-                # Repeat the function after a certain time interval (milliseconds)
-                label.after(1, write_frame)
+                    # Repeat the function after a certain time interval (milliseconds)
+                    video_label.after(10, write_frame)
 
         # Start recording the video
         write_frame()
 
-        # Cancel video recording when the window is closed
-        root.protocol("WM_DELETE_WINDOW", lambda: stop_recording(cap, out))
-
-
-
 root = tk.Tk()
 root.title("Image with Buttons")
 root.state('zoomed')
-
 
 canvas = tk.Canvas(root, width=4000, height=600)
 canvas.pack(expand=True, fill=tk.BOTH)
@@ -209,8 +228,6 @@ exit_image_button.pack()
 
 record_button = tk.Button(root, text="Record Video", command=record_video)
 record_button.pack()
-
-
 
 # Nút chức năng
 buttons = []
@@ -242,5 +259,8 @@ img_x = img_y = img_width = img_height = 0
 
 # Lớp đệm để vẽ
 drawing_layer = None
+
+# Recording flag
+recording = False
 
 root.mainloop()
