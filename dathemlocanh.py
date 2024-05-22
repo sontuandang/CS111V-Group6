@@ -1,3 +1,4 @@
+import 
 import tkinter as tk
 from tkinter import filedialog, colorchooser
 from PIL import Image, ImageTk, ImageEnhance, ImageDraw, ImageFilter
@@ -189,6 +190,19 @@ def record_video():
 
         # Cancel video recording when the window is closed
         root.protocol("WM_DELETE_WINDOW", lambda: stop_recording(cap, out))
+def stop_recording(cap, out):
+    cap.release()
+    out.release()
+    cv2.destroyAllWindows()
+    root.destroy()
+
+# Create a tkinter window
+root = tk.Tk()
+root.title("Record Video")
+
+# Create a label to display the video
+label = tk.Label(root)
+label.pack()
 
 
 
